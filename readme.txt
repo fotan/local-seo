@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 7.1
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -31,6 +31,9 @@ bulk-update tools like MainWP.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
 
 == Changelog ==
+
+= 1.0.4 =
+* Plugin slug/text domain normalised to "local-seo".
 
 = 1.0.1 =
 * Menu and settings page now available to the Editor role and up (filter `local_seo_capability`).

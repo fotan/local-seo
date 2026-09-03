@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.0.3
+ * Version:     1.0.4
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -28,7 +28,7 @@ require __DIR__ . "/vendor/plugin-update-checker/plugin-update-checker.php";
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
 $local_seo_update_checker = PucFactory::buildUpdateChecker(
-    "https://github.com/fotan/local_seo/",
+    "https://github.com/fotan/local-seo/",
     __FILE__,
     "local-seo",
 );
