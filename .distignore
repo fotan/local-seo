@@ -1,0 +1,6 @@
+# Files excluded from the distributable plugin zip built by the release workflow.
+/.git
+/.github
+/.gitignore
+/.distignore
+/README.md

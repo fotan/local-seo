@@ -3,7 +3,9 @@ name: Release on version bump
 on:
   push:
     branches: [master]
-    paths: [local_seo.php]
+    paths:
+      - local_seo.php
+      - readme.txt
 
 permissions:
   contents: write
@@ -24,6 +26,14 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Check readme.txt Stable tag matches
+        run: |
+          stable=$(grep -m1 -oP '^\s*Stable tag:\s*\K[0-9][0-9A-Za-z.\-]*' readme.txt)
+          if [ "$stable" != "${{ steps.version.outputs.version }}" ]; then
+            echo "readme.txt Stable tag ($stable) does not match plugin Version (${{ steps.version.outputs.version }})" >&2
+            exit 1
+          fi
+
       - name: Check if tag already exists
         id: check
         run: |
@@ -33,6 +43,19 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Build clean plugin zip
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          set -eu
+          slug=local_seo
+          mkdir -p build/"$slug"
+          # Copy everything except VCS/dev files listed in .distignore.
+          rsync -a --exclude-from=.distignore \
+            --exclude='.git' --exclude='build' \
+            ./ build/"$slug"/
+          (cd build && zip -rq "$slug.zip" "$slug")
+          echo "Contents:" && unzip -l build/"$slug.zip"
+
       - name: Create release
         if: steps.check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
@@ -40,3 +63,4 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           generate_release_notes: true
+          files: build/local_seo.zip
