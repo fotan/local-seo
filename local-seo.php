@@ -2,11 +2,11 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.0.2
+ * Version:     1.0.3
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
- * Text Domain: local_seo
+ * Text Domain: local-seo
  */
 
 if (!defined("ABSPATH")) {
@@ -30,7 +30,7 @@ use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 $local_seo_update_checker = PucFactory::buildUpdateChecker(
     "https://github.com/fotan/local_seo/",
     __FILE__,
-    "local_seo",
+    "local-seo",
 );
 $local_seo_update_checker->setBranch("master");
 // Install the clean plugin zip attached to each GitHub Release (built by
@@ -41,7 +41,7 @@ if (
 ) {
     $local_seo_update_checker
         ->getVcsApi()
-        ->enableReleaseAssets('/local_seo\.zip$/');
+        ->enableReleaseAssets('/local-seo\.zip$/');
 }
 
 class Local_SEO_Plugin {
@@ -122,8 +122,8 @@ class Local_SEO_Plugin {
 
     public function add_menu() {
         add_menu_page(
-            __("Local SEO", "local_seo"),
-            __("Local SEO", "local_seo"),
+            __("Local SEO", "local-seo"),
+            __("Local SEO", "local-seo"),
             $this->capability(),
             self::MENU_SLUG,
             [$this, "render_settings_page"],
@@ -449,11 +449,11 @@ class Local_SEO_Plugin {
         $name = self::OPTION_KEY;
         ?>
 		<div class="wrap">
-			<h1><?php esc_html_e("Local SEO", "local_seo"); ?></h1>
+			<h1><?php esc_html_e("Local SEO", "local-seo"); ?></h1>
 			<p class="description">
 				<?php esc_html_e(
         "Outputs LocalBusiness structured data in the site head. Leave a field blank to omit it from the output.",
-        "local_seo",
+        "local-seo",
     ); ?>
 			</p>
 
@@ -463,12 +463,12 @@ class Local_SEO_Plugin {
 			<form method="post" action="options.php">
 				<?php settings_fields(self::OPTION_KEY . "_group"); ?>
 
-				<h2 class="title"><?php esc_html_e("Schema Identity", "local_seo"); ?></h2>
+				<h2 class="title"><?php esc_html_e("Schema Identity", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_schema_type"><?php esc_html_e(
           "Business Type",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td>
 							<input type="text" id="ls_schema_type" class="regular-text"
@@ -479,11 +479,11 @@ class Local_SEO_Plugin {
 							<p class="description">
 								<?php esc_html_e(
             "A schema.org type, e.g. LocalBusiness, Store, ProfessionalService.",
-            "local_seo",
+            "local-seo",
         ); ?>
 								<a href="https://schema.org/LocalBusiness" target="_blank" rel="noopener noreferrer"><?php esc_html_e(
             "Browse business types on schema.org",
-            "local_seo",
+            "local-seo",
         ); ?></a>
 							</p>
 						</td>
@@ -491,7 +491,7 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_schema_id"><?php esc_html_e(
           "Schema @id",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td>
 							<input type="text" id="ls_schema_id" class="large-text code"
@@ -499,31 +499,31 @@ class Local_SEO_Plugin {
 								value="<?php echo esc_attr($o["schema_id"]); ?>" />
 							<p class="description"><?php esc_html_e(
            "Match this to your existing Organization node @id (e.g. The SEO Framework) so the two merge into one entity instead of conflicting.",
-           "local_seo",
+           "local-seo",
        ); ?></p>
 						</td>
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Contact", "local_seo"); ?></h2>
+				<h2 class="title"><?php esc_html_e("Contact", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_telephone"><?php esc_html_e(
           "Telephone",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="text" id="ls_telephone" class="regular-text"
 							name="<?php echo esc_attr($name); ?>[telephone]"
 							value="<?php echo esc_attr($o["telephone"]); ?>" />
 							<p class="description"><?php esc_html_e(
            "Saved in E.164 format (e.g. +15551234567). A bare 10-digit number is treated as US/Canada (+1).",
-           "local_seo",
+           "local-seo",
        ); ?></p></td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="ls_email"><?php esc_html_e(
           "Email",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="email" id="ls_email" class="regular-text"
 							name="<?php echo esc_attr($name); ?>[email]"
@@ -532,7 +532,7 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_image"><?php esc_html_e(
           "Image",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td>
 							<input type="url" id="ls_image" class="large-text code ls-image-url"
@@ -541,11 +541,11 @@ class Local_SEO_Plugin {
 							<p>
 								<button type="button" class="button ls-image-pick"><?php esc_html_e(
             "Choose from media library",
-            "local_seo",
+            "local-seo",
         ); ?></button>
 								<button type="button" class="button ls-image-clear"<?php echo "" === $o["image"]
             ? ' style="display:none;"'
-            : ""; ?>><?php esc_html_e("Remove", "local_seo"); ?></button>
+            : ""; ?>><?php esc_html_e("Remove", "local-seo"); ?></button>
 							</p>
 							<p class="ls-image-preview">
 								<?php if ("" !== $o["image"]): ?>
@@ -556,14 +556,14 @@ class Local_SEO_Plugin {
 							</p>
 							<p class="description"><?php esc_html_e(
            "Google's LocalBusiness rich result recommends an image; the Organization logo does not count for it. Prefer a real photo (storefront, products, work samples) over the logo. Use a high-resolution file; 16:9, 4:3, and 1:1 crops are ideal. Points at the media library URL, so replacing the file in the library updates the markup.",
-           "local_seo",
+           "local-seo",
        ); ?></p>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="ls_description"><?php esc_html_e(
           "Description",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><textarea id="ls_description" class="large-text" rows="3"
 							name="<?php echo esc_attr($name); ?>[description]"><?php echo esc_textarea(
@@ -573,15 +573,15 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_price_range"><?php esc_html_e(
           "Price Range",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td>
 							<?php $price_ranges = [
-           "" => __("— not set —", "local_seo"),
-           "$" => __("$ — Inexpensive", "local_seo"),
-           "$$" => __("$$ — Moderate", "local_seo"),
-           "$$$" => __("$$$ — Pricey", "local_seo"),
-           "$$$$" => __("$$$$ — High-End", "local_seo"),
+           "" => __("— not set —", "local-seo"),
+           "$" => __("$ — Inexpensive", "local-seo"),
+           "$$" => __("$$ — Moderate", "local-seo"),
+           "$$$" => __("$$$ — Pricey", "local-seo"),
+           "$$$$" => __("$$$$ — High-End", "local-seo"),
        ]; ?>
 							<select id="ls_price_range" name="<?php echo esc_attr($name); ?>[price_range]">
 								<?php foreach ($price_ranges as $value => $label): ?>
@@ -593,18 +593,18 @@ class Local_SEO_Plugin {
 							</select>
 							<p class="description"><?php esc_html_e(
            "Google's LocalBusiness rich result recommends priceRange. The dollar-sign scale ($ to $$$$) is the format it expects; picking a value here always emits it in that form.",
-           "local_seo",
+           "local-seo",
        ); ?></p>
 						</td>
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Address", "local_seo"); ?></h2>
+				<h2 class="title"><?php esc_html_e("Address", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_street"><?php esc_html_e(
           "Street Address",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td>
 							<input type="text" id="ls_street" class="regular-text"
@@ -612,14 +612,14 @@ class Local_SEO_Plugin {
 								value="<?php echo esc_attr($o["street_address"]); ?>" />
 							<p class="description"><?php esc_html_e(
            "Leave Street Address blank if you are a service-area business — you travel to customers or work remotely and they do not visit a premises of yours. In that case list the places you cover under Areas served instead, and keep this empty so search engines and your Google Business Profile agree that there is no public storefront. Google's testing tools will still show a “missing address” warning; that is only a recommendation and is safe to ignore here. Fill this in only if customers actually come to a location of yours, even by appointment.",
-           "local_seo",
+           "local-seo",
        ); ?></p>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="ls_locality"><?php esc_html_e(
           "City / Locality",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="text" id="ls_locality" class="regular-text"
 							name="<?php echo esc_attr($name); ?>[address_locality]"
@@ -628,7 +628,7 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_region"><?php esc_html_e(
           "State / Region",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="text" id="ls_region" class="regular-text"
 							name="<?php echo esc_attr($name); ?>[address_region]"
@@ -637,7 +637,7 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_postal"><?php esc_html_e(
           "Postal Code",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="text" id="ls_postal" class="regular-text"
 							name="<?php echo esc_attr($name); ?>[postal_code]"
@@ -646,7 +646,7 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_country"><?php esc_html_e(
           "Country",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td>
 							<input type="text" id="ls_country" class="small-text"
@@ -654,18 +654,18 @@ class Local_SEO_Plugin {
 								value="<?php echo esc_attr($o["address_country"]); ?>" placeholder="US" />
 							<p class="description"><?php esc_html_e(
            "Two-letter country code, e.g. US.",
-           "local_seo",
+           "local-seo",
        ); ?></p>
 						</td>
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Geo", "local_seo"); ?></h2>
+				<h2 class="title"><?php esc_html_e("Geo", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_lat"><?php esc_html_e(
           "Latitude",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="text" id="ls_lat" class="regular-text"
 							name="<?php echo esc_attr($name); ?>[latitude]"
@@ -674,14 +674,14 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_lng"><?php esc_html_e(
           "Longitude",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="text" id="ls_lng" class="regular-text"
 							name="<?php echo esc_attr($name); ?>[longitude]"
 							value="<?php echo esc_attr($o["longitude"]); ?>" /></td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e("Map Link", "local_seo"); ?></th>
+						<th scope="row"><?php esc_html_e("Map Link", "local-seo"); ?></th>
 						<td>
 							<label>
 								<input type="checkbox" value="1"
@@ -689,19 +689,19 @@ class Local_SEO_Plugin {
 									<?php checked($o["include_hasmap"], 1); ?> />
 								<?php esc_html_e(
             "Include a hasMap link (generated from the coordinates above)",
-            "local_seo",
+            "local-seo",
         ); ?>
 							</label>
 						</td>
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Service Areas", "local_seo"); ?></h2>
+				<h2 class="title"><?php esc_html_e("Service Areas", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_areas"><?php esc_html_e(
           "Areas Served",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td>
 							<textarea id="ls_areas" class="large-text code" rows="5"
@@ -710,16 +710,16 @@ class Local_SEO_Plugin {
 ); ?></textarea>
 							<p class="description"><?php esc_html_e(
            "One city per line. Each becomes an areaServed City entry.",
-           "local_seo",
+           "local-seo",
        ); ?></p>
 						</td>
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Opening Hours", "local_seo"); ?></h2>
+				<h2 class="title"><?php esc_html_e("Opening Hours", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?php esc_html_e("Open Days", "local_seo"); ?></th>
+						<th scope="row"><?php esc_html_e("Open Days", "local-seo"); ?></th>
 						<td>
 							<?php foreach ($days as $d): ?>
 								<label style="display:inline-block;min-width:9em;">
@@ -731,14 +731,14 @@ class Local_SEO_Plugin {
 							<?php endforeach; ?>
 							<p class="description"><?php esc_html_e(
            "Hours are only output when at least one day plus both times are set.",
-           "local_seo",
+           "local-seo",
        ); ?></p>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="ls_opens"><?php esc_html_e(
           "Opens",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="time" id="ls_opens"
 							name="<?php echo esc_attr($name); ?>[hours_opens]"
@@ -747,7 +747,7 @@ class Local_SEO_Plugin {
 					<tr>
 						<th scope="row"><label for="ls_closes"><?php esc_html_e(
           "Closes",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="time" id="ls_closes"
 							name="<?php echo esc_attr($name); ?>[hours_closes]"
@@ -755,12 +755,12 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Other", "local_seo"); ?></h2>
+				<h2 class="title"><?php esc_html_e("Other", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_founding"><?php esc_html_e(
           "Founding Date",
-          "local_seo",
+          "local-seo",
       ); ?></label></th>
 						<td><input type="date" id="ls_founding"
 							name="<?php echo esc_attr($name); ?>[founding_date]"
@@ -771,7 +771,7 @@ class Local_SEO_Plugin {
 				<?php submit_button(); ?>
 			</form>
 
-			<h2><?php esc_html_e("Current Output", "local_seo"); ?></h2>
+			<h2><?php esc_html_e("Current Output", "local-seo"); ?></h2>
 			<?php
    $preview = $this->build_schema_array();
    $has_more = array_diff_key(
@@ -782,7 +782,7 @@ class Local_SEO_Plugin {
        echo "<p><em>" .
            esc_html__(
                "Nothing will be output yet — fill in at least one field above.",
-               "local_seo",
+               "local-seo",
            ) .
            "</em></p>";
    } else {
@@ -805,16 +805,16 @@ class Local_SEO_Plugin {
 				<div class="postbox">
 					<h2 class="hndle" style="padding:8px 12px;"><?php esc_html_e(
          "About this plugin",
-         "local_seo",
+         "local-seo",
      ); ?></h2>
 					<div class="inside">
 						<p><?php esc_html_e(
           "This plugin is made to work specifically with The SEO Framework, adding local SEO data that search engines use.",
-          "local_seo",
+          "local-seo",
       ); ?></p>
 						<p><?php esc_html_e(
           'It emits a LocalBusiness node sharing the same @id as The SEO Framework\'s Organization node, so the two merge into a single entity in your structured data instead of conflicting.',
-          "local_seo",
+          "local-seo",
       ); ?></p>
 					</div>
 				</div>
@@ -822,46 +822,46 @@ class Local_SEO_Plugin {
 				<div class="postbox">
 					<h2 class="hndle" style="padding:8px 12px;"><?php esc_html_e(
          "Keep this consistent with your Google Business Profile",
-         "local_seo",
+         "local-seo",
      ); ?></h2>
 					<div class="inside">
 						<p><?php esc_html_e(
           "Search engines cross-reference this markup against your Google Business Profile and other listings. Different formatting is harmless, but different facts weaken your local ranking and can surface wrong details in search results.",
-          "local_seo",
+          "local-seo",
       ); ?></p>
 						<ul style="list-style:disc;margin-left:1.4em;">
 							<li><strong><?php esc_html_e(
            "Name:",
-           "local_seo",
+           "local-seo",
        ); ?></strong> <?php esc_html_e(
     "Use your real-world business name exactly as it appears on the profile. Do not add keywords or location.",
-    "local_seo",
+    "local-seo",
 ); ?></li>
 							<li><strong><?php esc_html_e(
            "Address:",
-           "local_seo",
+           "local-seo",
        ); ?></strong> <?php esc_html_e(
     "Match the profile line for line (same suite number, same abbreviations). If you are service-area only, leave the address blank.",
-    "local_seo",
+    "local-seo",
 ); ?></li>
 							<li><strong><?php esc_html_e(
            "Phone:",
-           "local_seo",
+           "local-seo",
        ); ?></strong> <?php esc_html_e(
     "Must be the same number as the profile, not a separate tracking or forwarding line. It is stored in E.164 format.",
-    "local_seo",
+    "local-seo",
 ); ?></li>
 							<li><strong><?php esc_html_e(
            "Hours:",
-           "local_seo",
+           "local-seo",
        ); ?></strong> <?php esc_html_e(
     "If these disagree with the profile, Google trusts the profile and treats the conflict as a poor signal.",
-    "local_seo",
+    "local-seo",
 ); ?></li>
 						</ul>
 						<p><?php esc_html_e(
           "Treat the Google Business Profile as the source of truth and mirror it here.",
-          "local_seo",
+          "local-seo",
       ); ?></p>
 					</div>
 				</div>
@@ -899,8 +899,8 @@ class Local_SEO_Plugin {
 			row.querySelector( '.ls-image-pick' ).addEventListener( 'click', function () {
 				if ( ! frame ) {
 					frame = wp.media( {
-						title: '<?php echo esc_js(__("Choose an image", "local_seo")); ?>',
-						button: { text: '<?php echo esc_js(__("Use this image", "local_seo")); ?>' },
+						title: '<?php echo esc_js(__("Choose an image", "local-seo")); ?>',
+						button: { text: '<?php echo esc_js(__("Use this image", "local-seo")); ?>' },
 						library: { type: 'image' },
 						multiple: false
 					} );

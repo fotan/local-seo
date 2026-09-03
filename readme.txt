@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 7.1
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -25,7 +25,7 @@ bulk-update tools like MainWP.
 
 == Installation ==
 
-1. Upload the plugin to `wp-content/plugins/local_seo`, or install the zip from
+1. Upload the plugin to `wp-content/plugins/local-seo`, or install the zip from
    the Plugins screen.
 2. Activate **Local SEO**.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
