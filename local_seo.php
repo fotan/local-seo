@@ -11,6 +11,27 @@ if (!defined("ABSPATH")) {
     exit();
 }
 
+// ==============================================================================
+// Auto-updates from GitHub
+// ------------------------------------------------------------------------------
+// Plugin Update Checker (vendor/) watches this public GitHub repo for tagged
+// releases. When a new tag lands, WordPress (and bulk tools like MainWP) shows
+// a normal "update available" notice on the Plugins list, and updating swaps
+// the files the same way any other plugin update does. No token needed — the
+// repo is public. Releases are cut automatically by .github/workflows/release.yml
+// whenever the Version header in this file is bumped on the master branch.
+// ==============================================================================
+require __DIR__ . "/vendor/plugin-update-checker/plugin-update-checker.php";
+
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$local_seo_update_checker = PucFactory::buildUpdateChecker(
+    "https://github.com/fotan/local_seo/",
+    __FILE__,
+    "local_seo",
+);
+$local_seo_update_checker->setBranch("master");
+
 class Local_SEO_Plugin {
     const OPTION_KEY = "local_seo_options";
     const MENU_SLUG = "local-seo";
@@ -78,11 +99,20 @@ class Local_SEO_Plugin {
      * Admin menu + settings registration
      * ------------------------------------------------------------------- */
 
+    /**
+     * Minimum capability to see the menu and open the settings page.
+     * Defaults to `edit_pages` — i.e. the Editor role and up. Filter it to
+     * `manage_options` to lock it back down to administrators only.
+     */
+    public function capability() {
+        return (string) apply_filters("local_seo_capability", "edit_pages");
+    }
+
     public function add_menu() {
         add_menu_page(
             __("Local SEO", "local-seo"),
             __("Local SEO", "local-seo"),
-            "manage_options",
+            $this->capability(),
             self::MENU_SLUG,
             [$this, "render_settings_page"],
             "dashicons-location-alt",
@@ -91,9 +121,12 @@ class Local_SEO_Plugin {
     }
 
     public function register_settings() {
+        // `capability` (WP 5.3+) lets non-admins submit options.php for this
+        // setting — without it the Settings API save would 403 for Editors
+        // even though they can see the page.
         register_setting(self::OPTION_KEY . "_group", self::OPTION_KEY, [
-            $this,
-            "sanitize",
+            "sanitize_callback" => [$this, "sanitize"],
+            "capability" => $this->capability(),
         ]);
     }
 
@@ -379,7 +412,7 @@ class Local_SEO_Plugin {
      * ------------------------------------------------------------------- */
 
     public function render_settings_page() {
-        if (!current_user_can("manage_options")) {
+        if (!current_user_can($this->capability())) {
             return;
         }
 

@@ -1,0 +1,14 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Local build / dependency artifacts (PUC is vendored intentionally, don't ignore it)
+node_modules/
+composer.lock
+
+# Local-only WordPress test installs
+/wp/
