@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.0.1
+ * Version:     1.0.2
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -36,8 +36,12 @@ $local_seo_update_checker->setBranch("master");
 // Install the clean plugin zip attached to each GitHub Release (built by
 // .github/workflows/release.yml) rather than GitHub's auto-generated source
 // tarball, which would carry .github/, .gitignore, etc. into wp-content/plugins.
-if (method_exists($local_seo_update_checker->getVcsApi(), "enableReleaseAssets")) {
-    $local_seo_update_checker->getVcsApi()->enableReleaseAssets('/local_seo\.zip$/');
+if (
+    method_exists($local_seo_update_checker->getVcsApi(), "enableReleaseAssets")
+) {
+    $local_seo_update_checker
+        ->getVcsApi()
+        ->enableReleaseAssets('/local_seo\.zip$/');
 }
 
 class Local_SEO_Plugin {
