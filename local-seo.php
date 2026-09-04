@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -68,6 +68,7 @@ class Local_SEO_Plugin {
             [$this, "output_schema"],
             (int) apply_filters("local_seo_wp_head_priority", 2),
         );
+        add_shortcode("local_seo_hours", [$this, "render_hours_shortcode"]);
     }
 
     /* ---------------------------------------------------------------------
@@ -97,6 +98,7 @@ class Local_SEO_Plugin {
             // different rows can have different hours (e.g. Sat 10-2) — one
             // OpeningHoursSpecification is emitted per row.
             "hours" => [],
+            "hours_shortcode_enabled" => 0,
             "founding_date" => "",
         ];
     }
@@ -265,6 +267,11 @@ class Local_SEO_Plugin {
                 ];
             }
         }
+        $out["hours_shortcode_enabled"] = empty(
+            $input["hours_shortcode_enabled"]
+        )
+            ? 0
+            : 1;
         $out["founding_date"] = $this->clean_date(
             isset($input["founding_date"]) ? $input["founding_date"] : "",
         );
@@ -462,6 +469,59 @@ class Local_SEO_Plugin {
             "\n</script>\n" .
             "<!-- END Local SEO plugin output -->\n";
         echo $out; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- see note above; JSON hex-encoded, safe in <script>
+    }
+
+    /**
+     * [local_seo_hours] — renders the same Opening Hours rows used in the
+     * JSON-LD as visible markup, gated on the "Enable [local_seo_hours]
+     * shortcode" checkbox. Each element gets a CSS class so the theme can
+     * style it (e.g. per-day text, the "today" row) without editing PHP:
+     *
+     *   .ls-hours                  wrapper
+     *   .ls-hours-row              one row (one set of days + one time range)
+     *   .ls-hours-row.ls-hours-today   the row containing today, if any
+     *   .ls-hours-days             the "Monday, Tuesday, ..." span
+     *   .ls-hours-day              one day within that span
+     *   .ls-hours-day-monday, etc. that day, individually
+     *   .ls-hours-time             the "9:00 am – 5:00 pm" span
+     */
+    public function render_hours_shortcode($atts = []) {
+        $o = $this->get_options();
+        if (empty($o["hours_shortcode_enabled"]) || empty($o["hours"])) {
+            return "";
+        }
+
+        $time_format = get_option("time_format", "g:i a");
+        $today = wp_date("l");
+
+        $html = '<div class="ls-hours">';
+        foreach ($o["hours"] as $row) {
+            $is_today = in_array($today, $row["days"], true);
+            $row_class = "ls-hours-row" . ($is_today ? " ls-hours-today" : "");
+
+            $day_spans = [];
+            foreach ($row["days"] as $d) {
+                $day_spans[] = sprintf(
+                    '<span class="ls-hours-day ls-hours-day-%s">%s</span>',
+                    esc_attr(strtolower($d)),
+                    esc_html($d),
+                );
+            }
+
+            $opens = date_i18n($time_format, strtotime($row["opens"]));
+            $closes = date_i18n($time_format, strtotime($row["closes"]));
+
+            $html .= sprintf(
+                '<div class="%1$s"><span class="ls-hours-days">%2$s</span> <span class="ls-hours-time">%3$s&ndash;%4$s</span></div>',
+                esc_attr($row_class),
+                implode(", ", $day_spans),
+                esc_html($opens),
+                esc_html($closes),
+            );
+        }
+        $html .= "</div>";
+
+        return $html;
     }
 
     /* ---------------------------------------------------------------------
@@ -818,6 +878,40 @@ class Local_SEO_Plugin {
        "+ Add Row",
        "local-seo",
    ); ?></button></p>
+
+				<p>
+					<label>
+						<input type="checkbox" value="1"
+							name="<?php echo esc_attr(
+       $name,
+   ); ?>[hours_shortcode_enabled]"
+							<?php checked(
+           !empty($o["hours_shortcode_enabled"]),
+       ); ?> />
+						<?php esc_html_e(
+        "Enable the [local_seo_hours] shortcode",
+        "local-seo",
+    ); ?>
+					</label>
+				</p>
+				<p class="description">
+					<?php esc_html_e(
+       "Place [local_seo_hours] in any page, post, or widget to display these hours. Each part gets a CSS class to style from your theme:",
+       "local-seo",
+   ); ?>
+					<code>.ls-hours</code>,
+					<code>.ls-hours-row</code>
+					(<code>.ls-hours-today</code>
+					<?php esc_html_e("on the current day's row", "local-seo"); ?>),
+					<code>.ls-hours-days</code>,
+					<code>.ls-hours-day</code>,
+					<code>.ls-hours-day-monday</code>
+					<?php esc_html_e(
+        "(etc., one per day name)",
+        "local-seo",
+    ); ?>,
+					<code>.ls-hours-time</code>.
+				</p>
 
 				<template id="ls-hours-row-template">
 					<?php $this->render_hours_row(
