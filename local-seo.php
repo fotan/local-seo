@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.3.2
+ * Version:     1.3.3
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -327,6 +327,26 @@ class Local_SEO_Plugin {
         ];
     }
 
+    /**
+     * valid_days(), rotated to start on the day set in Settings > General >
+     * Week Starts On (the "start_of_week" option: 0 = Sunday ... 6 = Saturday).
+     * Used for shortcode display order; the admin editing table and the JSON-LD
+     * dayOfWeek order are unaffected — this is purely a display concern.
+     */
+    private function week_starting_days() {
+        $week = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ];
+        $start = ((int) get_option("start_of_week", 0)) % 7;
+        return array_merge(array_slice($week, $start), array_slice($week, 0, $start));
+    }
+
     private function clean_time($v) {
         $v = trim((string) $v);
         return preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $v) ? $v : "";
@@ -546,7 +566,7 @@ class Local_SEO_Plugin {
         }
 
         $html = '<div class="ls-hours">';
-        foreach ($this->valid_days() as $d) {
+        foreach ($this->week_starting_days() as $d) {
             $row = isset($by_day[$d]) ? $by_day[$d] : null;
 
             $classes = ["ls-hours-row", "ls-hours-" . strtolower($d)];

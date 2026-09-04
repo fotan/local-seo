@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 6.6
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -31,6 +31,9 @@ bulk-update tools like MainWP.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
 
 == Changelog ==
+
+= 1.3.3 =
+* [local_seo_hours] now starts its day list on whatever day is set in Settings > General > Week Starts On, instead of always starting on Monday.
 
 = 1.3.2 =
 * Renamed the [local_seo_hours] closed-note CSS class from .ls-hours-closed-note to .ls-temp-closed-note.
