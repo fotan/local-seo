@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.4.0
+ * Version:     1.4.1
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -683,13 +683,38 @@ class Local_SEO_Plugin {
     ); ?>
 			</p>
 
+			<ul class="subsubsub" style="float:none;margin-bottom:1em;">
+				<?php
+    $ls_toc = [
+        "ls-section-schema-identity" => __("Schema Identity", "local-seo"),
+        "ls-section-contact" => __("Contact", "local-seo"),
+        "ls-section-address" => __("Address", "local-seo"),
+        "ls-section-geo" => __("Geo", "local-seo"),
+        "ls-section-service-areas" => __("Service Areas", "local-seo"),
+        "ls-section-opening-hours" => __("Opening Hours", "local-seo"),
+        "ls-section-other" => __("Other", "local-seo"),
+        "ls-section-current-output" => __("Current Output", "local-seo"),
+    ];
+    $ls_toc_last = array_key_last($ls_toc);
+    foreach ($ls_toc as $ls_toc_id => $ls_toc_label):
+        ?>
+					<li>
+						<a href="#<?php echo esc_attr(
+          $ls_toc_id,
+      ); ?>"><?php echo esc_html($ls_toc_label); ?></a>
+						<?php echo $ls_toc_id !== $ls_toc_last ? " |" : ""; ?>
+					</li>
+				<?php
+    endforeach; ?>
+			</ul>
+
 			<div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
 			<div style="flex:1 1 520px;min-width:0;">
 
 			<form method="post" action="options.php">
 				<?php settings_fields(self::OPTION_KEY . "_group"); ?>
 
-				<h2 class="title"><?php esc_html_e("Schema Identity", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-schema-identity"><?php esc_html_e("Schema Identity", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_schema_type"><?php esc_html_e(
@@ -731,7 +756,7 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Contact", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-contact"><?php esc_html_e("Contact", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_telephone"><?php esc_html_e(
@@ -825,7 +850,7 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Address", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-address"><?php esc_html_e("Address", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_street"><?php esc_html_e(
@@ -886,7 +911,7 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Geo", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-geo"><?php esc_html_e("Geo", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_lat"><?php esc_html_e(
@@ -922,7 +947,7 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Service Areas", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-service-areas"><?php esc_html_e("Service Areas", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_areas"><?php esc_html_e(
@@ -942,7 +967,7 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e("Opening Hours", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-opening-hours"><?php esc_html_e("Opening Hours", "local-seo"); ?></h2>
 
 				<table class="form-table" role="presentation">
 					<tr>
@@ -1105,7 +1130,7 @@ class Local_SEO_Plugin {
 				} )();
 				</script>
 
-				<h2 class="title"><?php esc_html_e("Other", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-other"><?php esc_html_e("Other", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_founding"><?php esc_html_e(
@@ -1121,7 +1146,7 @@ class Local_SEO_Plugin {
 				<?php submit_button(); ?>
 			</form>
 
-			<h2><?php esc_html_e("Current Output", "local-seo"); ?></h2>
+			<h2 id="ls-section-current-output"><?php esc_html_e("Current Output", "local-seo"); ?></h2>
 			<?php
    $preview = $this->build_schema_array();
    $has_more = array_diff_key(
