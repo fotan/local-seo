@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 6.6
-Stable tag: 1.4.1
+Stable tag: 1.4.3
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -31,6 +31,12 @@ bulk-update tools like MainWP.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
 
 == Changelog ==
+
+= 1.4.3 =
+* Removed the inline flex styling from [local_seo_hours] rows — right-justifying the time is now up to the theme's CSS (see plugin README for the snippet).
+
+= 1.4.2 =
+* [local_seo_hours] now shows "Monday:" (colon after the day) with the time/"Closed" text right-justified on each row.
 
 = 1.4.1 =
 * Added a table-of-contents links row at the top of the settings page to jump to each section (Schema Identity, Contact, Address, Geo, Service Areas, Opening Hours, Other, Current Output).

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.4.1
+ * Version:     1.4.3
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -525,7 +525,7 @@ class Local_SEO_Plugin {
      *   .ls-hours-row.ls-hours-monday, etc.   that specific day, individually
      *   .ls-hours-row.ls-hours-today          the row for today
      *   .ls-hours-row.ls-hours-closed         a day with no hours set
-     *   .ls-hours-day              the day-name span ("Monday")
+     *   .ls-hours-day              the day-name span ("Monday:")
      *   .ls-hours-time             the hours span ("9:00 am–5:00 pm" or "Closed")
      *
      * If "Temporarily Closed" is checked, the day-by-day list is replaced
@@ -603,7 +603,7 @@ class Local_SEO_Plugin {
             }
 
             $html .= sprintf(
-                '<div class="%1$s"><span class="ls-hours-day">%2$s</span> <span class="ls-hours-time">%3$s</span></div>',
+                '<div class="%1$s"><span class="ls-hours-day">%2$s:</span> <span class="ls-hours-time">%3$s</span></div>',
                 esc_attr(implode(" ", $classes)),
                 esc_html($d),
                 $time_text,
