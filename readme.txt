@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 6.6
-Stable tag: 1.3.0
+Stable tag: 1.3.2
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -31,6 +31,12 @@ bulk-update tools like MainWP.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
 
 == Changelog ==
+
+= 1.3.2 =
+* Renamed the [local_seo_hours] closed-note CSS class from .ls-hours-closed-note to .ls-temp-closed-note.
+
+= 1.3.1 =
+* [local_seo_hours] no longer shows a "Temporarily Closed" label when closed — it displays only the Closed Note text (and nothing at all if that note is left blank).
 
 = 1.3.0 =
 * Added a "Temporarily Closed" checkbox and optional note (Opening Hours section) for seasonal/temporary closures. When checked, [local_seo_hours] shows the notice instead of the daily hours, and hours are left out of the JSON-LD. Note: there's no schema.org/Google property for closure status itself — this only affects what your own pages display.
