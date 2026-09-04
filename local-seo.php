@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.0.4
+ * Version:     1.1.0
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -92,9 +92,11 @@ class Local_SEO_Plugin {
             "longitude" => "",
             "include_hasmap" => 0,
             "area_served" => "",
-            "hours_days" => [],
-            "hours_opens" => "",
-            "hours_closes" => "",
+            // List of rows: [ 'days' => [...], 'opens' => 'HH:MM', 'closes' => 'HH:MM' ].
+            // A row's days can share one open/close pair (e.g. Mon-Fri 9-5), and
+            // different rows can have different hours (e.g. Sat 10-2) — one
+            // OpeningHoursSpecification is emitted per row.
+            "hours" => [],
             "founding_date" => "",
         ];
     }
@@ -104,7 +106,27 @@ class Local_SEO_Plugin {
         if (!is_array($saved)) {
             $saved = [];
         }
-        return wp_parse_args($saved, $this->defaults());
+        $out = wp_parse_args($saved, $this->defaults());
+
+        // Migrate pre-1.1.0 single open/close range (hours_days/hours_opens/
+        // hours_closes) into the new multi-row "hours" format on read, so
+        // sites upgrading don't lose their saved hours before their next save.
+        if (
+            empty($out["hours"]) &&
+            !empty($saved["hours_days"]) &&
+            !empty($saved["hours_opens"]) &&
+            !empty($saved["hours_closes"])
+        ) {
+            $out["hours"] = [
+                [
+                    "days" => $saved["hours_days"],
+                    "opens" => $saved["hours_opens"],
+                    "closes" => $saved["hours_closes"],
+                ],
+            ];
+        }
+
+        return $out;
     }
 
     /* ---------------------------------------------------------------------
@@ -211,30 +233,38 @@ class Local_SEO_Plugin {
             isset($input["area_served"]) ? $input["area_served"] : "",
         );
 
-        $valid_days = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-        ];
-        $days = [];
-        if (!empty($input["hours_days"]) && is_array($input["hours_days"])) {
-            foreach ($valid_days as $d) {
-                if (in_array($d, $input["hours_days"], true)) {
-                    $days[] = $d;
+        $out["hours"] = [];
+        if (!empty($input["hours"]) && is_array($input["hours"])) {
+            foreach ($input["hours"] as $row) {
+                if (!is_array($row)) {
+                    continue;
                 }
+                $row_days = [];
+                if (!empty($row["days"]) && is_array($row["days"])) {
+                    foreach ($this->valid_days() as $d) {
+                        if (in_array($d, $row["days"], true)) {
+                            $row_days[] = $d;
+                        }
+                    }
+                }
+                $opens = $this->clean_time(
+                    isset($row["opens"]) ? $row["opens"] : "",
+                );
+                $closes = $this->clean_time(
+                    isset($row["closes"]) ? $row["closes"] : "",
+                );
+                // Drop incomplete rows rather than emitting a bare/misleading
+                // OpeningHoursSpecification for them.
+                if (empty($row_days) || "" === $opens || "" === $closes) {
+                    continue;
+                }
+                $out["hours"][] = [
+                    "days" => $row_days,
+                    "opens" => $opens,
+                    "closes" => $closes,
+                ];
             }
         }
-        $out["hours_days"] = $days;
-        $out["hours_opens"] = $this->clean_time(
-            isset($input["hours_opens"]) ? $input["hours_opens"] : "",
-        );
-        $out["hours_closes"] = $this->clean_time(
-            isset($input["hours_closes"]) ? $input["hours_closes"] : "",
-        );
         $out["founding_date"] = $this->clean_date(
             isset($input["founding_date"]) ? $input["founding_date"] : "",
         );
@@ -266,6 +296,18 @@ class Local_SEO_Plugin {
         }
 
         return sanitize_text_field($v);
+    }
+
+    private function valid_days() {
+        return [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ];
     }
 
     private function clean_time($v) {
@@ -361,19 +403,16 @@ class Local_SEO_Plugin {
             }
         }
 
-        if (
-            !empty($o["hours_days"]) &&
-            "" !== $o["hours_opens"] &&
-            "" !== $o["hours_closes"]
-        ) {
-            $node["openingHoursSpecification"] = [
-                [
+        if (!empty($o["hours"])) {
+            $node["openingHoursSpecification"] = [];
+            foreach ($o["hours"] as $row) {
+                $node["openingHoursSpecification"][] = [
                     "@type" => "OpeningHoursSpecification",
-                    "dayOfWeek" => array_values($o["hours_days"]),
-                    "opens" => $o["hours_opens"],
-                    "closes" => $o["hours_closes"],
-                ],
-            ];
+                    "dayOfWeek" => array_values($row["days"]),
+                    "opens" => $row["opens"],
+                    "closes" => $row["closes"],
+                ];
+            }
         }
 
         if ("" !== $o["founding_date"]) {
@@ -428,6 +467,43 @@ class Local_SEO_Plugin {
     /* ---------------------------------------------------------------------
      * Settings page
      * ------------------------------------------------------------------- */
+
+    /**
+     * Renders one <tr> of the opening-hours repeater. Used both for existing
+     * saved rows and, with $index = "__INDEX__", as the JS clone template.
+     */
+    private function render_hours_row($index, $row, $name, $all_days) {
+        $row = wp_parse_args($row, ["days" => [], "opens" => "", "closes" => ""]);
+        $base = $name . "[hours][" . $index . "]";
+        ?>
+        <tr>
+            <td>
+                <?php foreach ($all_days as $d): ?>
+                    <label style="display:inline-block;min-width:8em;">
+                        <input type="checkbox" value="<?php echo esc_attr($d); ?>"
+                            name="<?php echo esc_attr($base); ?>[days][]"
+                            <?php checked(
+                                in_array($d, $row["days"], true),
+                            ); ?> />
+                        <?php echo esc_html($d); ?>
+                    </label>
+                <?php endforeach; ?>
+            </td>
+            <td><input type="time" name="<?php echo esc_attr(
+                $base,
+            ); ?>[opens]" value="<?php echo esc_attr($row["opens"]); ?>" /></td>
+            <td><input type="time" name="<?php echo esc_attr(
+                $base,
+            ); ?>[closes]" value="<?php echo esc_attr(
+     $row["closes"],
+ ); ?>" /></td>
+            <td><button type="button" class="button-link-delete ls-hours-remove"><?php esc_html_e(
+                "Remove",
+                "local-seo",
+            ); ?></button></td>
+        </tr>
+        <?php
+    }
 
     public function render_settings_page() {
         if (!current_user_can($this->capability())) {
@@ -717,43 +793,66 @@ class Local_SEO_Plugin {
 				</table>
 
 				<h2 class="title"><?php esc_html_e("Opening Hours", "local-seo"); ?></h2>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><?php esc_html_e("Open Days", "local-seo"); ?></th>
-						<td>
-							<?php foreach ($days as $d): ?>
-								<label style="display:inline-block;min-width:9em;">
-									<input type="checkbox" value="<?php echo esc_attr($d); ?>"
-										name="<?php echo esc_attr($name); ?>[hours_days][]"
-										<?php checked(in_array($d, $o["hours_days"], true)); ?> />
-									<?php echo esc_html($d); ?>
-								</label>
-							<?php endforeach; ?>
-							<p class="description"><?php esc_html_e(
-           "Hours are only output when at least one day plus both times are set.",
-           "local-seo",
-       ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="ls_opens"><?php esc_html_e(
-          "Opens",
-          "local-seo",
-      ); ?></label></th>
-						<td><input type="time" id="ls_opens"
-							name="<?php echo esc_attr($name); ?>[hours_opens]"
-							value="<?php echo esc_attr($o["hours_opens"]); ?>" /></td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="ls_closes"><?php esc_html_e(
-          "Closes",
-          "local-seo",
-      ); ?></label></th>
-						<td><input type="time" id="ls_closes"
-							name="<?php echo esc_attr($name); ?>[hours_closes]"
-							value="<?php echo esc_attr($o["hours_closes"]); ?>" /></td>
-					</tr>
+				<p class="description">
+					<?php esc_html_e(
+     "Add one row per group of days that share the same hours (e.g. Mon-Fri 9-5, then a second row for Sat 10-2). A row is only output once at least one day and both times are set.",
+     "local-seo",
+ ); ?>
+				</p>
+				<table class="widefat" style="max-width:800px;" id="ls-hours-table">
+					<thead>
+						<tr>
+							<th><?php esc_html_e("Days", "local-seo"); ?></th>
+							<th><?php esc_html_e("Opens", "local-seo"); ?></th>
+							<th><?php esc_html_e("Closes", "local-seo"); ?></th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody id="ls-hours-rows">
+						<?php foreach ($o["hours"] as $i => $row): ?>
+							<?php $this->render_hours_row($i, $row, $name, $days); ?>
+						<?php endforeach; ?>
+					</tbody>
 				</table>
+				<p><button type="button" class="button" id="ls-hours-add"><?php esc_html_e(
+       "+ Add Row",
+       "local-seo",
+   ); ?></button></p>
+
+				<template id="ls-hours-row-template">
+					<?php $this->render_hours_row(
+       "__INDEX__",
+       ["days" => [], "opens" => "", "closes" => ""],
+       $name,
+       $days,
+   ); ?>
+				</template>
+
+				<script>
+				( function () {
+					var rows = document.getElementById( 'ls-hours-rows' );
+					var addButton = document.getElementById( 'ls-hours-add' );
+					var template = document.getElementById( 'ls-hours-row-template' );
+					var nextIndex = <?php echo (int) count($o["hours"]); ?>;
+
+					addButton.addEventListener( 'click', function () {
+						var html = template.innerHTML.replace( /__INDEX__/g, String( nextIndex ) );
+						var tmp = document.createElement( 'tbody' );
+						tmp.innerHTML = html;
+						rows.appendChild( tmp.firstElementChild );
+						nextIndex++;
+					} );
+
+					rows.addEventListener( 'click', function ( e ) {
+						if ( e.target && e.target.classList.contains( 'ls-hours-remove' ) ) {
+							var tr = e.target.closest( 'tr' );
+							if ( tr ) {
+								tr.parentNode.removeChild( tr );
+							}
+						}
+					} );
+				} )();
+				</script>
 
 				<h2 class="title"><?php esc_html_e("Other", "local-seo"); ?></h2>
 				<table class="form-table" role="presentation">
@@ -923,3 +1022,14 @@ class Local_SEO_Plugin {
 }
 
 Local_SEO_Plugin::instance();
+
+/**
+ * Public accessor for other code (theme templates, site-specific snippets,
+ * blocks) that wants to display the same opening hours this plugin outputs
+ * as JSON-LD, without reaching into the plugin's internals or wp_options
+ * directly. Returns a list of rows: [ 'days' => [...], 'opens' => 'HH:MM',
+ * 'closes' => 'HH:MM' ]. Empty/incomplete rows are already filtered out.
+ */
+function local_seo_get_hours() {
+    return Local_SEO_Plugin::instance()->get_options()["hours"];
+}

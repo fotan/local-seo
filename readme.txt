@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
-Tested up to: 7.1
-Stable tag: 1.0.4
+Tested up to: 6.6
+Stable tag: 1.1.0
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -31,6 +31,10 @@ bulk-update tools like MainWP.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
 
 == Changelog ==
+
+= 1.1.0 =
+* Opening Hours now supports multiple rows with different hours per group of days (e.g. Mon-Fri 9-5, Sat 10-2), instead of one shared time range for all checked days. Existing single-range settings are migrated automatically.
+* Added `local_seo_get_hours()` for theme/site code that wants to display the same hours elsewhere on the page.
 
 = 1.0.4 =
 * Plugin slug/text domain normalised to "local-seo".
