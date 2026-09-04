@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.3.3
+ * Version:     1.4.0
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -100,6 +100,7 @@ class Local_SEO_Plugin {
             "hours" => [],
             "hours_shortcode_enabled" => 0,
             "temporarily_closed" => 0,
+            "temporarily_closed_heading" => "",
             "temporarily_closed_note" => "",
             "founding_date" => "",
         ];
@@ -277,6 +278,11 @@ class Local_SEO_Plugin {
         $out["temporarily_closed"] = empty($input["temporarily_closed"])
             ? 0
             : 1;
+        $out["temporarily_closed_heading"] = sanitize_text_field(
+            isset($input["temporarily_closed_heading"])
+                ? $input["temporarily_closed_heading"]
+                : "",
+        );
         $out["temporarily_closed_note"] = sanitize_text_field(
             isset($input["temporarily_closed_note"])
                 ? $input["temporarily_closed_note"]
@@ -523,11 +529,12 @@ class Local_SEO_Plugin {
      *   .ls-hours-time             the hours span ("9:00 am–5:00 pm" or "Closed")
      *
      * If "Temporarily Closed" is checked, the day-by-day list is replaced
-     * entirely by the Closed Note text (since listing hours that don't
-     * currently apply would be misleading). Nothing is output if that note
-     * is left blank.
+     * entirely by the Closed Heading/Closed Note text (since listing hours
+     * that don't currently apply would be misleading). Nothing is output if
+     * both are left blank; either one alone is fine.
      *
      *   .ls-hours.ls-hours-temporarily-closed   wrapper, closed state
+     *   .ls-temp-closed-heading                the heading text (an <h3>)
      *   .ls-temp-closed-note                   the note text
      */
     public function render_hours_shortcode($atts = []) {
@@ -537,14 +544,24 @@ class Local_SEO_Plugin {
         }
 
         if (!empty($o["temporarily_closed"])) {
-            if ("" === $o["temporarily_closed_note"]) {
+            $heading = $o["temporarily_closed_heading"];
+            $note = $o["temporarily_closed_note"];
+            if ("" === $heading && "" === $note) {
                 return "";
             }
             $html = '<div class="ls-hours ls-hours-temporarily-closed">';
-            $html .=
-                '<div class="ls-temp-closed-note">' .
-                esc_html($o["temporarily_closed_note"]) .
-                "</div>";
+            if ("" !== $heading) {
+                $html .=
+                    '<h3 class="ls-temp-closed-heading">' .
+                    esc_html($heading) .
+                    "</h3>";
+            }
+            if ("" !== $note) {
+                $html .=
+                    '<div class="ls-temp-closed-note">' .
+                    esc_html($note) .
+                    "</div>";
+            }
             $html .= "</div>";
             return $html;
         }
@@ -947,32 +964,51 @@ class Local_SEO_Plugin {
         "local-seo",
     ); ?>
 							</label>
-							<p class="description"><?php esc_html_e(
-           "While checked, the [local_seo_hours] shortcode shows the Closed Note below instead of the daily hours, and hours are left out of the structured data. There is no schema.org/Google property for \"temporarily closed\" itself, so this only controls what's shown on your own pages.",
+						<p class="description"><?php esc_html_e(
+           "While checked, the [local_seo_hours] shortcode shows the heading/note below instead of the daily hours, and hours are left out of the structured data. There is no schema.org/Google property for \"temporarily closed\" itself, so this only controls what's shown on your own pages.",
            "local-seo",
        ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="ls_temp_closed_note"><?php esc_html_e(
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ls_temp_closed_heading"><?php esc_html_e(
+          "Closed Heading",
+          "local-seo",
+      ); ?></label></th>
+					<td>
+						<input type="text" id="ls_temp_closed_heading" class="regular-text"
+							name="<?php echo esc_attr(
+       $name,
+   ); ?>[temporarily_closed_heading]"
+							value="<?php echo esc_attr(
+       $o["temporarily_closed_heading"],
+   ); ?>" />
+						<p class="description"><?php esc_html_e(
+           "Optional, rendered as an <h3>, e.g. \"Closed for the Season\".",
+           "local-seo",
+       ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="ls_temp_closed_note"><?php esc_html_e(
           "Closed Note",
           "local-seo",
       ); ?></label></th>
-						<td>
-							<input type="text" id="ls_temp_closed_note" class="regular-text"
-								name="<?php echo esc_attr(
+					<td>
+						<input type="text" id="ls_temp_closed_note" class="regular-text"
+							name="<?php echo esc_attr(
        $name,
    ); ?>[temporarily_closed_note]"
-								value="<?php echo esc_attr(
+							value="<?php echo esc_attr(
        $o["temporarily_closed_note"],
    ); ?>" />
-							<p class="description"><?php esc_html_e(
+						<p class="description"><?php esc_html_e(
            "Optional, e.g. \"Reopening in March\".",
            "local-seo",
        ); ?></p>
-						</td>
-					</tr>
-				</table>
+					</td>
+				</tr>
+			</table>
 
 				<p class="description">
 					<?php esc_html_e(

@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 6.6
-Stable tag: 1.3.3
+Stable tag: 1.4.0
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -31,6 +31,9 @@ bulk-update tools like MainWP.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
 
 == Changelog ==
+
+= 1.4.0 =
+* Split the temporary-closure text into two fields: a "Closed Heading" (rendered as an <h3>, class `.ls-temp-closed-heading`) and the existing "Closed Note" (`.ls-temp-closed-note`). Both are optional; [local_seo_hours] outputs whichever are filled in.
 
 = 1.3.3 =
 * [local_seo_hours] now starts its day list on whatever day is set in Settings > General > Week Starts On, instead of always starting on Monday.
