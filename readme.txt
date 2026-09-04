@@ -1,6 +1,6 @@
 === Local SEO ===
 Contributors: mattdanskine
-Tested up to: 6.6
+Tested up to: 7.1
 Stable tag: 1.4.3
 Requires at least: 5.3
 Requires PHP: 7.4
