@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 6.6
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -31,6 +31,12 @@ bulk-update tools like MainWP.
 3. Open **Settings &rarr; Local SEO** and fill in the business details.
 
 == Changelog ==
+
+= 1.3.0 =
+* Added a "Temporarily Closed" checkbox and optional note (Opening Hours section) for seasonal/temporary closures. When checked, [local_seo_hours] shows the notice instead of the daily hours, and hours are left out of the JSON-LD. Note: there's no schema.org/Google property for closure status itself — this only affects what your own pages display.
+
+= 1.2.1 =
+* [local_seo_hours] now lists all seven days individually, one per line, showing "Closed" for any day without hours set (previously it only showed the saved rows grouped together, e.g. one line for "Mon-Fri").
 
 = 1.2.0 =
 * Added a `[local_seo_hours]` shortcode to display opening hours on the page, gated behind an "Enable" checkbox. Output uses per-day/per-row CSS classes (`.ls-hours-day-monday`, `.ls-hours-today`, etc.) so hours can be styled from the theme.

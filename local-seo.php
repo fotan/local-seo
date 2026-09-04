@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -99,6 +99,8 @@ class Local_SEO_Plugin {
             // OpeningHoursSpecification is emitted per row.
             "hours" => [],
             "hours_shortcode_enabled" => 0,
+            "temporarily_closed" => 0,
+            "temporarily_closed_note" => "",
             "founding_date" => "",
         ];
     }
@@ -272,6 +274,14 @@ class Local_SEO_Plugin {
         )
             ? 0
             : 1;
+        $out["temporarily_closed"] = empty($input["temporarily_closed"])
+            ? 0
+            : 1;
+        $out["temporarily_closed_note"] = sanitize_text_field(
+            isset($input["temporarily_closed_note"])
+                ? $input["temporarily_closed_note"]
+                : "",
+        );
         $out["founding_date"] = $this->clean_date(
             isset($input["founding_date"]) ? $input["founding_date"] : "",
         );
@@ -410,7 +420,12 @@ class Local_SEO_Plugin {
             }
         }
 
-        if (!empty($o["hours"])) {
+        // schema.org/Google Search have no recognised "temporarily closed"
+        // property for LocalBusiness — that status comes from the Google
+        // Business Profile, not page markup — so there's nothing accurate to
+        // add here. What we *can* do accurately is stop claiming hours that
+        // no longer apply while closed.
+        if (!empty($o["hours"]) && empty($o["temporarily_closed"])) {
             $node["openingHoursSpecification"] = [];
             foreach ($o["hours"] as $row) {
                 $node["openingHoursSpecification"][] = [
@@ -472,51 +487,91 @@ class Local_SEO_Plugin {
     }
 
     /**
-     * [local_seo_hours] — renders the same Opening Hours rows used in the
-     * JSON-LD as visible markup, gated on the "Enable [local_seo_hours]
-     * shortcode" checkbox. Each element gets a CSS class so the theme can
-     * style it (e.g. per-day text, the "today" row) without editing PHP:
+     * [local_seo_hours] — renders the Opening Hours settings as one line per
+     * calendar day (Monday through Sunday, always all seven, in that order),
+     * showing "Closed" for any day not covered by a saved row. Gated on the
+     * "Enable [local_seo_hours] shortcode" checkbox. Each element is a block
+     * (<div>), so the list reads vertically by default; every element also
+     * gets a CSS class so the theme can restyle it without editing PHP:
      *
      *   .ls-hours                  wrapper
-     *   .ls-hours-row              one row (one set of days + one time range)
-     *   .ls-hours-row.ls-hours-today   the row containing today, if any
-     *   .ls-hours-days             the "Monday, Tuesday, ..." span
-     *   .ls-hours-day              one day within that span
-     *   .ls-hours-day-monday, etc. that day, individually
-     *   .ls-hours-time             the "9:00 am – 5:00 pm" span
+     *   .ls-hours-row              one calendar day's row
+     *   .ls-hours-row.ls-hours-monday, etc.   that specific day, individually
+     *   .ls-hours-row.ls-hours-today          the row for today
+     *   .ls-hours-row.ls-hours-closed         a day with no hours set
+     *   .ls-hours-day              the day-name span ("Monday")
+     *   .ls-hours-time             the hours span ("9:00 am–5:00 pm" or "Closed")
+     *
+     * If "Temporarily Closed" is checked, the day-by-day list is replaced
+     * entirely by a single notice (plus the optional note), since listing
+     * hours that don't currently apply would be misleading:
+     *
+     *   .ls-hours.ls-hours-temporarily-closed   wrapper, closed state
+     *   .ls-hours-closed-notice                 the "Temporarily Closed" line
+     *   .ls-hours-closed-note                   the optional note, if set
      */
     public function render_hours_shortcode($atts = []) {
         $o = $this->get_options();
-        if (empty($o["hours_shortcode_enabled"]) || empty($o["hours"])) {
+        if (empty($o["hours_shortcode_enabled"])) {
+            return "";
+        }
+
+        if (!empty($o["temporarily_closed"])) {
+            $html = '<div class="ls-hours ls-hours-temporarily-closed">';
+            $html .= '<div class="ls-hours-closed-notice">';
+            $html .= esc_html__("Temporarily Closed", "local-seo");
+            $html .= "</div>";
+            if ("" !== $o["temporarily_closed_note"]) {
+                $html .=
+                    '<div class="ls-hours-closed-note">' .
+                    esc_html($o["temporarily_closed_note"]) .
+                    "</div>";
+            }
+            $html .= "</div>";
+            return $html;
+        }
+
+        if (empty($o["hours"])) {
             return "";
         }
 
         $time_format = get_option("time_format", "g:i a");
         $today = wp_date("l");
 
-        $html = '<div class="ls-hours">';
+        // Flatten the saved rows into a single day => {opens, closes} lookup,
+        // so every calendar day can be rendered once, in order, below.
+        $by_day = [];
         foreach ($o["hours"] as $row) {
-            $is_today = in_array($today, $row["days"], true);
-            $row_class = "ls-hours-row" . ($is_today ? " ls-hours-today" : "");
-
-            $day_spans = [];
             foreach ($row["days"] as $d) {
-                $day_spans[] = sprintf(
-                    '<span class="ls-hours-day ls-hours-day-%s">%s</span>',
-                    esc_attr(strtolower($d)),
-                    esc_html($d),
-                );
+                $by_day[$d] = $row;
+            }
+        }
+
+        $html = '<div class="ls-hours">';
+        foreach ($this->valid_days() as $d) {
+            $row = isset($by_day[$d]) ? $by_day[$d] : null;
+
+            $classes = ["ls-hours-row", "ls-hours-" . strtolower($d)];
+            if ($d === $today) {
+                $classes[] = "ls-hours-today";
+            }
+            if (!$row) {
+                $classes[] = "ls-hours-closed";
             }
 
-            $opens = date_i18n($time_format, strtotime($row["opens"]));
-            $closes = date_i18n($time_format, strtotime($row["closes"]));
+            if ($row) {
+                $opens = date_i18n($time_format, strtotime($row["opens"]));
+                $closes = date_i18n($time_format, strtotime($row["closes"]));
+                $time_text = esc_html($opens) . "&ndash;" . esc_html($closes);
+            } else {
+                $time_text = esc_html__("Closed", "local-seo");
+            }
 
             $html .= sprintf(
-                '<div class="%1$s"><span class="ls-hours-days">%2$s</span> <span class="ls-hours-time">%3$s&ndash;%4$s</span></div>',
-                esc_attr($row_class),
-                implode(", ", $day_spans),
-                esc_html($opens),
-                esc_html($closes),
+                '<div class="%1$s"><span class="ls-hours-day">%2$s</span> <span class="ls-hours-time">%3$s</span></div>',
+                esc_attr(implode(" ", $classes)),
+                esc_html($d),
+                $time_text,
             );
         }
         $html .= "</div>";
@@ -853,6 +908,54 @@ class Local_SEO_Plugin {
 				</table>
 
 				<h2 class="title"><?php esc_html_e("Opening Hours", "local-seo"); ?></h2>
+
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php esc_html_e(
+      "Temporarily Closed",
+      "local-seo",
+  ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" value="1" id="ls_temp_closed"
+									name="<?php echo esc_attr(
+       $name,
+   ); ?>[temporarily_closed]"
+									<?php checked(
+           !empty($o["temporarily_closed"]),
+       ); ?> />
+								<?php esc_html_e(
+        "Business is temporarily closed (e.g. seasonal)",
+        "local-seo",
+    ); ?>
+							</label>
+							<p class="description"><?php esc_html_e(
+           "While checked, the [local_seo_hours] shortcode shows this notice instead of the daily hours, and hours are left out of the structured data. There is no schema.org/Google property for \"temporarily closed\" itself, so this only controls what's shown on your own pages.",
+           "local-seo",
+       ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="ls_temp_closed_note"><?php esc_html_e(
+          "Closed Note",
+          "local-seo",
+      ); ?></label></th>
+						<td>
+							<input type="text" id="ls_temp_closed_note" class="regular-text"
+								name="<?php echo esc_attr(
+       $name,
+   ); ?>[temporarily_closed_note]"
+								value="<?php echo esc_attr(
+       $o["temporarily_closed_note"],
+   ); ?>" />
+							<p class="description"><?php esc_html_e(
+           "Optional, e.g. \"Reopening in March\".",
+           "local-seo",
+       ); ?></p>
+						</td>
+					</tr>
+				</table>
+
 				<p class="description">
 					<?php esc_html_e(
      "Add one row per group of days that share the same hours (e.g. Mon-Fri 9-5, then a second row for Sat 10-2). A row is only output once at least one day and both times are set.",
@@ -896,20 +999,20 @@ class Local_SEO_Plugin {
 				</p>
 				<p class="description">
 					<?php esc_html_e(
-       "Place [local_seo_hours] in any page, post, or widget to display these hours. Each part gets a CSS class to style from your theme:",
+       "Place [local_seo_hours] in any page, post, or widget. It lists all seven days, in order, showing \"Closed\" for any day with no hours set. Each part gets a CSS class to style from your theme:",
        "local-seo",
    ); ?>
 					<code>.ls-hours</code>,
 					<code>.ls-hours-row</code>
-					(<code>.ls-hours-today</code>
-					<?php esc_html_e("on the current day's row", "local-seo"); ?>),
-					<code>.ls-hours-days</code>,
-					<code>.ls-hours-day</code>,
-					<code>.ls-hours-day-monday</code>
+					(<code>.ls-hours-monday</code>
 					<?php esc_html_e(
-        "(etc., one per day name)",
+        "etc., one per day, plus",
         "local-seo",
-    ); ?>,
+    ); ?>
+					<code>.ls-hours-today</code>
+					<?php esc_html_e("and", "local-seo"); ?>
+					<code>.ls-hours-closed</code>),
+					<code>.ls-hours-day</code>,
 					<code>.ls-hours-time</code>.
 				</p>
 
