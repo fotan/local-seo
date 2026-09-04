@@ -1,7 +1,7 @@
 === Local SEO ===
 Contributors: mattdanskine
 Tested up to: 7.1
-Stable tag: 1.4.3
+Stable tag: 1.4.4
 Requires at least: 5.3
 Requires PHP: 7.4
 License: GPLv2 or later

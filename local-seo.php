@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Local SEO
  * Description: Generates LocalBusiness JSON-LD structured data in wp_head from a settings form. Uses a shared @id so it merges into an existing Organization node (e.g. The SEO Framework) instead of conflicting. Blank fields are omitted from the output.
- * Version:     1.4.3
+ * Version:     1.4.4
  * Author:      Matt Danskine
  * License:     GPL-2.0-or-later
  * Requires PHP: 7.4
@@ -350,7 +350,10 @@ class Local_SEO_Plugin {
             "Saturday",
         ];
         $start = ((int) get_option("start_of_week", 0)) % 7;
-        return array_merge(array_slice($week, $start), array_slice($week, 0, $start));
+        return array_merge(
+            array_slice($week, $start),
+            array_slice($week, 0, $start),
+        );
     }
 
     private function clean_time($v) {
@@ -623,14 +626,20 @@ class Local_SEO_Plugin {
      * saved rows and, with $index = "__INDEX__", as the JS clone template.
      */
     private function render_hours_row($index, $row, $name, $all_days) {
-        $row = wp_parse_args($row, ["days" => [], "opens" => "", "closes" => ""]);
+        $row = wp_parse_args($row, [
+            "days" => [],
+            "opens" => "",
+            "closes" => "",
+        ]);
         $base = $name . "[hours][" . $index . "]";
         ?>
         <tr>
             <td>
                 <?php foreach ($all_days as $d): ?>
                     <label style="display:inline-block;min-width:8em;">
-                        <input type="checkbox" value="<?php echo esc_attr($d); ?>"
+                        <input type="checkbox" value="<?php echo esc_attr(
+                            $d,
+                        ); ?>"
                             name="<?php echo esc_attr($base); ?>[days][]"
                             <?php checked(
                                 in_array($d, $row["days"], true),
@@ -644,9 +653,7 @@ class Local_SEO_Plugin {
             ); ?>[opens]" value="<?php echo esc_attr($row["opens"]); ?>" /></td>
             <td><input type="time" name="<?php echo esc_attr(
                 $base,
-            ); ?>[closes]" value="<?php echo esc_attr(
-     $row["closes"],
- ); ?>" /></td>
+            ); ?>[closes]" value="<?php echo esc_attr($row["closes"]); ?>" /></td>
             <td><button type="button" class="button-link-delete ls-hours-remove"><?php esc_html_e(
                 "Remove",
                 "local-seo",
@@ -696,16 +703,15 @@ class Local_SEO_Plugin {
         "ls-section-current-output" => __("Current Output", "local-seo"),
     ];
     $ls_toc_last = array_key_last($ls_toc);
-    foreach ($ls_toc as $ls_toc_id => $ls_toc_label):
-        ?>
+    foreach ($ls_toc as $ls_toc_id => $ls_toc_label): ?>
 					<li>
-						<a href="#<?php echo esc_attr(
-          $ls_toc_id,
-      ); ?>"><?php echo esc_html($ls_toc_label); ?></a>
+						<a href="#<?php echo esc_attr($ls_toc_id); ?>"><?php echo esc_html(
+    $ls_toc_label,
+); ?></a>
 						<?php echo $ls_toc_id !== $ls_toc_last ? " |" : ""; ?>
 					</li>
-				<?php
-    endforeach; ?>
+				<?php endforeach;
+    ?>
 			</ul>
 
 			<div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
@@ -714,7 +720,10 @@ class Local_SEO_Plugin {
 			<form method="post" action="options.php">
 				<?php settings_fields(self::OPTION_KEY . "_group"); ?>
 
-				<h2 class="title" id="ls-section-schema-identity"><?php esc_html_e("Schema Identity", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-schema-identity"><?php esc_html_e(
+        "Schema Identity",
+        "local-seo",
+    ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_schema_type"><?php esc_html_e(
@@ -756,7 +765,10 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title" id="ls-section-contact"><?php esc_html_e("Contact", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-contact"><?php esc_html_e(
+        "Contact",
+        "local-seo",
+    ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_telephone"><?php esc_html_e(
@@ -850,7 +862,10 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title" id="ls-section-address"><?php esc_html_e("Address", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-address"><?php esc_html_e(
+        "Address",
+        "local-seo",
+    ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_street"><?php esc_html_e(
@@ -911,7 +926,10 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title" id="ls-section-geo"><?php esc_html_e("Geo", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-geo"><?php esc_html_e(
+        "Geo",
+        "local-seo",
+    ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_lat"><?php esc_html_e(
@@ -947,7 +965,10 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title" id="ls-section-service-areas"><?php esc_html_e("Service Areas", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-service-areas"><?php esc_html_e(
+        "Service Areas",
+        "local-seo",
+    ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_areas"><?php esc_html_e(
@@ -967,79 +988,67 @@ class Local_SEO_Plugin {
 					</tr>
 				</table>
 
-				<h2 class="title" id="ls-section-opening-hours"><?php esc_html_e("Opening Hours", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-opening-hours"><?php esc_html_e(
+        "Opening Hours",
+        "local-seo",
+    ); ?></h2>
 
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?php esc_html_e(
-      "Temporarily Closed",
-      "local-seo",
-  ); ?></th>
+						<th scope="row"><?php esc_html_e("Temporarily Closed", "local-seo"); ?></th>
 						<td>
 							<label>
 								<input type="checkbox" value="1" id="ls_temp_closed"
-									name="<?php echo esc_attr(
-       $name,
-   ); ?>[temporarily_closed]"
-									<?php checked(
-           !empty($o["temporarily_closed"]),
-       ); ?> />
+									name="<?php echo esc_attr($name); ?>[temporarily_closed]"
+									<?php checked(!empty($o["temporarily_closed"])); ?> />
 								<?php esc_html_e(
-        "Business is temporarily closed (e.g. seasonal)",
-        "local-seo",
-    ); ?>
+            "Business is temporarily closed (e.g. seasonal)",
+            "local-seo",
+        ); ?>
 							</label>
 						<p class="description"><?php esc_html_e(
-           "While checked, the [local_seo_hours] shortcode shows the heading/note below instead of the daily hours, and hours are left out of the structured data. There is no schema.org/Google property for \"temporarily closed\" itself, so this only controls what's shown on your own pages.",
-           "local-seo",
-       ); ?></p>
+          "While checked, the [local_seo_hours] shortcode shows the heading/note below instead of the daily hours, and hours are left out of the structured data. There is no schema.org/Google property for \"temporarily closed\" itself, so this only controls what's shown on your own pages.",
+          "local-seo",
+      ); ?></p>
 					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="ls_temp_closed_heading"><?php esc_html_e(
-          "Closed Heading",
-          "local-seo",
-      ); ?></label></th>
+         "Closed Heading",
+         "local-seo",
+     ); ?></label></th>
 					<td>
 						<input type="text" id="ls_temp_closed_heading" class="regular-text"
-							name="<?php echo esc_attr(
-       $name,
-   ); ?>[temporarily_closed_heading]"
-							value="<?php echo esc_attr(
-       $o["temporarily_closed_heading"],
-   ); ?>" />
+							name="<?php echo esc_attr($name); ?>[temporarily_closed_heading]"
+							value="<?php echo esc_attr($o["temporarily_closed_heading"]); ?>" />
 						<p class="description"><?php esc_html_e(
-           "Optional, rendered as an <h3>, e.g. \"Closed for the Season\".",
-           "local-seo",
-       ); ?></p>
+          "Optional, rendered as an <h3>, e.g. \"Closed for the Season\".",
+          "local-seo",
+      ); ?></p>
 					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="ls_temp_closed_note"><?php esc_html_e(
-          "Closed Note",
-          "local-seo",
-      ); ?></label></th>
+         "Closed Note",
+         "local-seo",
+     ); ?></label></th>
 					<td>
 						<input type="text" id="ls_temp_closed_note" class="regular-text"
-							name="<?php echo esc_attr(
-       $name,
-   ); ?>[temporarily_closed_note]"
-							value="<?php echo esc_attr(
-       $o["temporarily_closed_note"],
-   ); ?>" />
+							name="<?php echo esc_attr($name); ?>[temporarily_closed_note]"
+							value="<?php echo esc_attr($o["temporarily_closed_note"]); ?>" />
 						<p class="description"><?php esc_html_e(
-           "Optional, e.g. \"Reopening in March\".",
-           "local-seo",
-       ); ?></p>
+          "Optional, e.g. \"Reopening in March\".",
+          "local-seo",
+      ); ?></p>
 					</td>
 				</tr>
 			</table>
 
 				<p class="description">
 					<?php esc_html_e(
-     "Add one row per group of days that share the same hours (e.g. Mon-Fri 9-5, then a second row for Sat 10-2). A row is only output once at least one day and both times are set.",
-     "local-seo",
- ); ?>
+         "Add one row per group of days that share the same hours (e.g. Mon-Fri 9-5, then a second row for Sat 10-2). A row is only output once at least one day and both times are set.",
+         "local-seo",
+     ); ?>
 				</p>
 				<table class="widefat" style="max-width:800px;" id="ls-hours-table">
 					<thead>
@@ -1057,37 +1066,27 @@ class Local_SEO_Plugin {
 					</tbody>
 				</table>
 				<p><button type="button" class="button" id="ls-hours-add"><?php esc_html_e(
-       "+ Add Row",
-       "local-seo",
-   ); ?></button></p>
+        "+ Add Row",
+        "local-seo",
+    ); ?></button></p>
 
 				<p>
 					<label>
 						<input type="checkbox" value="1"
-							name="<?php echo esc_attr(
-       $name,
-   ); ?>[hours_shortcode_enabled]"
-							<?php checked(
-           !empty($o["hours_shortcode_enabled"]),
-       ); ?> />
-						<?php esc_html_e(
-        "Enable the [local_seo_hours] shortcode",
-        "local-seo",
-    ); ?>
+							name="<?php echo esc_attr($name); ?>[hours_shortcode_enabled]"
+							<?php checked(!empty($o["hours_shortcode_enabled"])); ?> />
+						<?php esc_html_e("Enable the [local_seo_hours] shortcode", "local-seo"); ?>
 					</label>
 				</p>
 				<p class="description">
 					<?php esc_html_e(
-       "Place [local_seo_hours] in any page, post, or widget. It lists all seven days, in order, showing \"Closed\" for any day with no hours set. Each part gets a CSS class to style from your theme:",
-       "local-seo",
-   ); ?>
+         "Place [local_seo_hours] in any page, post, or widget. It lists all seven days, in order, showing \"Closed\" for any day with no hours set. Each part gets a CSS class to style from your theme:",
+         "local-seo",
+     ); ?>
 					<code>.ls-hours</code>,
 					<code>.ls-hours-row</code>
 					(<code>.ls-hours-monday</code>
-					<?php esc_html_e(
-        "etc., one per day, plus",
-        "local-seo",
-    ); ?>
+					<?php esc_html_e("etc., one per day, plus", "local-seo"); ?>
 					<code>.ls-hours-today</code>
 					<?php esc_html_e("and", "local-seo"); ?>
 					<code>.ls-hours-closed</code>),
@@ -1097,11 +1096,11 @@ class Local_SEO_Plugin {
 
 				<template id="ls-hours-row-template">
 					<?php $this->render_hours_row(
-       "__INDEX__",
-       ["days" => [], "opens" => "", "closes" => ""],
-       $name,
-       $days,
-   ); ?>
+         "__INDEX__",
+         ["days" => [], "opens" => "", "closes" => ""],
+         $name,
+         $days,
+     ); ?>
 				</template>
 
 				<script>
@@ -1130,7 +1129,10 @@ class Local_SEO_Plugin {
 				} )();
 				</script>
 
-				<h2 class="title" id="ls-section-other"><?php esc_html_e("Other", "local-seo"); ?></h2>
+				<h2 class="title" id="ls-section-other"><?php esc_html_e(
+        "Other",
+        "local-seo",
+    ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ls_founding"><?php esc_html_e(
@@ -1146,7 +1148,10 @@ class Local_SEO_Plugin {
 				<?php submit_button(); ?>
 			</form>
 
-			<h2 id="ls-section-current-output"><?php esc_html_e("Current Output", "local-seo"); ?></h2>
+			<h2 id="ls-section-current-output"><?php esc_html_e(
+       "Current Output",
+       "local-seo",
+   ); ?></h2>
 			<?php
    $preview = $this->build_schema_array();
    $has_more = array_diff_key(
